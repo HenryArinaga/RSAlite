@@ -95,11 +95,100 @@ int factor_with_trial(uint64_t n,
     return count;
 }
 
+int factor_with_sqrt_simd(uint64_t n,
+                          uint64_t *factors,
+                          int max_factors,
+                          const struct OptimizationContext *opt)
+{
+    int count = 0;
+    uint64_t p = 2;
+
+    for (; p + 3 <= n / p; p += 4)
+    {
+        if (cancel_requested(opt))
+            return count;
+
+        uint64_t d0 = p;
+        uint64_t d1 = p + 1;
+        uint64_t d2 = p + 2;
+        uint64_t d3 = p + 3;
+
+        if (n % d0 == 0)
+        {
+            if (count < max_factors) factors[count++] = d0;
+            while (n % d0 == 0)
+            {
+                if (cancel_requested(opt)) return count;
+                n /= d0;
+            }
+        }
+
+        if (n % d1 == 0)
+        {
+            if (count < max_factors) factors[count++] = d1;
+            while (n % d1 == 0)
+            {
+                if (cancel_requested(opt)) return count;
+                n /= d1;
+            }
+        }
+
+        if (n % d2 == 0)
+        {
+            if (count < max_factors) factors[count++] = d2;
+            while (n % d2 == 0)
+            {
+                if (cancel_requested(opt)) return count;
+                n /= d2;
+            }
+        }
+
+        if (n % d3 == 0)
+        {
+            if (count < max_factors) factors[count++] = d3;
+            while (n % d3 == 0)
+            {
+                if (cancel_requested(opt)) return count;
+                n /= d3;
+            }
+        }
+    }
+
+    for (; p <= n / p; p++)
+    {
+        if (cancel_requested(opt))
+            return count;
+
+        if (n % p == 0)
+        {
+            if (count < max_factors) factors[count++] = p;
+            while (n % p == 0)
+            {
+                if (cancel_requested(opt)) return count;
+                n /= p;
+            }
+        }
+    }
+
+    if (n > 1 && count < max_factors)
+        factors[count++] = n;
+
+    return count;
+}
+
+
+
 int factor_with_sqrt(uint64_t n,
                      uint64_t *factors,
                      int max_factors,
                      const struct OptimizationContext *opt)
 {
+
+    if (opt && opt->USE_SIMD && simd_supported())
+    {
+        return factor_with_sqrt_simd(n, factors, max_factors, opt);
+    }
+
     int count = 0;
 
     for (uint64_t p = 2; p <= n / p; p++)
