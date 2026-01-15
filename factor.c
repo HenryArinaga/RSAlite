@@ -4,10 +4,18 @@
 #include "factor.h"
 #include "prime.h"
 #include "optimization.h"
+#include "simd.h"
 
 static inline bool cancel_requested(const struct OptimizationContext *opt)
 {
     return opt && opt->cancel_flag && *opt->cancel_flag;
+}
+int factor_with_trial_simd(uint64_t n,
+                           uint64_t *factors,
+                           int max_factors,
+                           const struct OptimizationContext *opt)
+{
+    return factor_with_trial(n, factors, max_factors, false, opt);
 }
 
 int factor_with_trial(uint64_t n,
@@ -16,6 +24,12 @@ int factor_with_trial(uint64_t n,
                       bool use_sieve,
                       const struct OptimizationContext *opt)
 {
+
+    if (use_sieve && opt && opt->USE_SIMD && simd_supported())
+    {
+        return factor_with_trial_simd(n, factors, max_factors, opt);
+    }
+
     int count = 0;
 
     if (n <= 1)
@@ -24,11 +38,16 @@ int factor_with_trial(uint64_t n,
     int *prime = NULL;
 
     uint64_t limit = 0;
-    for (limit = 1; (limit + 1) <= n / (limit + 1); limit++) {}
+    for (limit = 1; (limit + 1) <= n / (limit + 1); limit++)
+    {
+    }
 
     if (use_sieve)
     {
-        prime = generate_prime_with_sieve((int)limit);
+        if (opt && opt->USE_SIMD && simd_supported())
+            prime = generate_prime_with_sieve_simd((int)limit);
+        else
+            prime = generate_prime_with_sieve((int)limit);
         if (!prime)
             return 0;
     }
@@ -75,7 +94,6 @@ int factor_with_trial(uint64_t n,
     free(prime);
     return count;
 }
-
 
 int factor_with_sqrt(uint64_t n,
                      uint64_t *factors,
@@ -209,6 +227,8 @@ int factor_with_pollard(uint64_t n,
     return factor_with_sqrt(n, factors, max_factors, opt);
 }
 
+
+
 int factor_number(uint64_t n,
                   FactorMethod method,
                   uint64_t *factors,
@@ -221,8 +241,7 @@ int factor_number(uint64_t n,
         .USE_MULTITHREADING = false,
         .USE_GPU = false,
         .USE_BENCHMARKING = false,
-        .cancel_flag = NULL
-    };
+        .cancel_flag = NULL};
 
     if (opt == NULL)
         opt = &default_opt;

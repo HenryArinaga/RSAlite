@@ -31,6 +31,7 @@ typedef struct
 
     GtkWidget *sieve_button;
     GtkWidget *benchmark_button;
+    GtkWidget *quit_button;
 
     GtkWidget *spinner;
 
