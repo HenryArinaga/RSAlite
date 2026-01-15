@@ -215,6 +215,7 @@ int factor_with_wheel(uint64_t n,
                       int max_factors,
                       const struct OptimizationContext *opt)
 {
+
     int count = 0;
 
     if (n <= 1)
