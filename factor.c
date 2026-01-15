@@ -1,21 +1,17 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
+
 #include "factor.h"
 #include "prime.h"
 #include "optimization.h"
 #include "simd.h"
 
+#define SIEVE_LIMIT 1000000ULL
+
 static inline bool cancel_requested(const struct OptimizationContext *opt)
 {
     return opt && opt->cancel_flag && *opt->cancel_flag;
-}
-int factor_with_trial_simd(uint64_t n,
-                           uint64_t *factors,
-                           int max_factors,
-                           const struct OptimizationContext *opt)
-{
-    return factor_with_trial(n, factors, max_factors, false, opt);
 }
 
 int factor_with_trial(uint64_t n,
@@ -24,23 +20,14 @@ int factor_with_trial(uint64_t n,
                       bool use_sieve,
                       const struct OptimizationContext *opt)
 {
-
-    if (use_sieve && opt && opt->USE_SIMD && simd_supported())
-    {
-        return factor_with_trial_simd(n, factors, max_factors, opt);
-    }
-
     int count = 0;
 
     if (n <= 1)
         return 0;
 
-    int *prime = NULL;
+    uint64_t limit = (n < SIEVE_LIMIT) ? n : SIEVE_LIMIT;
 
-    uint64_t limit = 0;
-    for (limit = 1; (limit + 1) <= n / (limit + 1); limit++)
-    {
-    }
+    int *prime = NULL;
 
     if (use_sieve)
     {
@@ -48,6 +35,7 @@ int factor_with_trial(uint64_t n,
             prime = generate_prime_with_sieve_simd((int)limit);
         else
             prime = generate_prime_with_sieve((int)limit);
+
         if (!prime)
             return 0;
     }
@@ -60,12 +48,12 @@ int factor_with_trial(uint64_t n,
             return count;
         }
 
-        if (use_sieve)
+        if (use_sieve && p <= limit)
         {
-            if (p <= limit && prime[p])
+            if (prime[p])
                 continue;
         }
-        else
+        else if (!use_sieve)
         {
             if (!is_prime_trail(p))
                 continue;
@@ -115,40 +103,48 @@ int factor_with_sqrt_simd(uint64_t n,
 
         if (n % d0 == 0)
         {
-            if (count < max_factors) factors[count++] = d0;
+            if (count < max_factors)
+                factors[count++] = d0;
             while (n % d0 == 0)
             {
-                if (cancel_requested(opt)) return count;
+                if (cancel_requested(opt))
+                    return count;
                 n /= d0;
             }
         }
 
         if (n % d1 == 0)
         {
-            if (count < max_factors) factors[count++] = d1;
+            if (count < max_factors)
+                factors[count++] = d1;
             while (n % d1 == 0)
             {
-                if (cancel_requested(opt)) return count;
+                if (cancel_requested(opt))
+                    return count;
                 n /= d1;
             }
         }
 
         if (n % d2 == 0)
         {
-            if (count < max_factors) factors[count++] = d2;
+            if (count < max_factors)
+                factors[count++] = d2;
             while (n % d2 == 0)
             {
-                if (cancel_requested(opt)) return count;
+                if (cancel_requested(opt))
+                    return count;
                 n /= d2;
             }
         }
 
         if (n % d3 == 0)
         {
-            if (count < max_factors) factors[count++] = d3;
+            if (count < max_factors)
+                factors[count++] = d3;
             while (n % d3 == 0)
             {
-                if (cancel_requested(opt)) return count;
+                if (cancel_requested(opt))
+                    return count;
                 n /= d3;
             }
         }
@@ -161,10 +157,13 @@ int factor_with_sqrt_simd(uint64_t n,
 
         if (n % p == 0)
         {
-            if (count < max_factors) factors[count++] = p;
+            if (count < max_factors)
+                factors[count++] = p;
+
             while (n % p == 0)
             {
-                if (cancel_requested(opt)) return count;
+                if (cancel_requested(opt))
+                    return count;
                 n /= p;
             }
         }
@@ -176,18 +175,13 @@ int factor_with_sqrt_simd(uint64_t n,
     return count;
 }
 
-
-
 int factor_with_sqrt(uint64_t n,
                      uint64_t *factors,
                      int max_factors,
                      const struct OptimizationContext *opt)
 {
-
     if (opt && opt->USE_SIMD && simd_supported())
-    {
         return factor_with_sqrt_simd(n, factors, max_factors, opt);
-    }
 
     int count = 0;
 
@@ -209,9 +203,6 @@ int factor_with_sqrt(uint64_t n,
             }
         }
     }
-
-    if (cancel_requested(opt))
-        return count;
 
     if (n > 1 && count < max_factors)
         factors[count++] = n;
@@ -291,9 +282,6 @@ int factor_with_wheel(uint64_t n,
     }
 
 done:
-    if (cancel_requested(opt))
-        return count;
-
     if (n > 1 && count < max_factors)
         factors[count++] = n;
 
@@ -316,8 +304,6 @@ int factor_with_pollard(uint64_t n,
     return factor_with_sqrt(n, factors, max_factors, opt);
 }
 
-
-
 int factor_number(uint64_t n,
                   FactorMethod method,
                   uint64_t *factors,
@@ -332,7 +318,7 @@ int factor_number(uint64_t n,
         .USE_BENCHMARKING = false,
         .cancel_flag = NULL};
 
-    if (opt == NULL)
+    if (!opt)
         opt = &default_opt;
 
     switch (method)
