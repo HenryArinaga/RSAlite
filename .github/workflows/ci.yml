@@ -13,16 +13,9 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install GCC & build tools
-        run: sudo apt update && sudo apt install -y build-essential
+        run: sudo apt update && sudo apt install -y build-essential pkg-config libgtk-3-dev
 
-      - name: Build unit test objects
+      - name: Build and run tests
         run: |
-          gcc -Wall -Wextra -std=c11 -g -c prime.c
-          gcc -Wall -Wextra -std=c11 -g -c factor.c
-          gcc -Wall -Wextra -std=c11 -g -c test_factor.c
-
-      - name: Link test binary
-        run: gcc -O2 -Wall -Wextra -std=c11 -g -o test_factor test_factor.o factor.o prime.o
-
-      - name: Run tests
-        run: ./test_factor
+          make clean
+          make test
