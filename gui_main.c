@@ -22,6 +22,7 @@ typedef struct
     GtkWidget *factor_button;
     GtkWidget *clear_button;
     GtkWidget *cancel_button;
+    GtkWidget *quit_button;
 
     GtkWidget *trial_button;
     GtkWidget *sqrt_button;
@@ -31,7 +32,7 @@ typedef struct
 
     GtkWidget *sieve_button;
     GtkWidget *benchmark_button;
-    GtkWidget *quit_button;
+    GtkWidget *simd_button;
 
     GtkWidget *spinner;
 
@@ -206,6 +207,7 @@ cleanup:
 
     gtk_widget_set_sensitive(w->sieve_button, TRUE);
     gtk_widget_set_sensitive(w->benchmark_button, TRUE);
+    gtk_widget_set_sensitive(w->simd_button, TRUE);
 
     gtk_spinner_stop(GTK_SPINNER(w->spinner));
     gtk_widget_set_visible(w->spinner, FALSE);
@@ -332,6 +334,13 @@ static void on_benchmark_toggled(GtkToggleButton *button, gpointer user_data)
                          w->opt.USE_BENCHMARKING ? "Benchmarking ON" : "Benchmarking OFF");
 }
 
+static void on_simd_toggled(GtkToggleButton *button, gpointer user_data)
+{
+    AppWidgets *w = user_data;
+    w->opt.USE_SIMD = gtk_toggle_button_get_active(button);
+    gtk_button_set_label(GTK_BUTTON(button),
+                         w->opt.USE_SIMD ? "SIMD ON" : "SIMD OFF");
+}
 static void on_cancel_clicked(GtkButton *button, gpointer user_data)
 {
     (void)button;
@@ -408,6 +417,7 @@ static void on_factor_clicked(GtkButton *button, gpointer user_data)
 
     gtk_widget_set_sensitive(w->sieve_button, FALSE);
     gtk_widget_set_sensitive(w->benchmark_button, FALSE);
+    gtk_widget_set_sensitive(w->simd_button, FALSE);
 
     gtk_widget_set_visible(w->cancel_button, TRUE);
     gtk_widget_set_sensitive(w->cancel_button, TRUE);
@@ -446,7 +456,7 @@ static void on_activate(GtkApplication *app, gpointer user_data)
 
     w->sieve_button = GTK_WIDGET(gtk_builder_get_object(builder, "sieve_button"));
     w->benchmark_button = GTK_WIDGET(gtk_builder_get_object(builder, "benchmark_button"));
-
+    w->simd_button = GTK_WIDGET(gtk_builder_get_object(builder, "simd_button"));
     w->spinner = GTK_WIDGET(gtk_builder_get_object(builder, "progress_spinner"));
 
     w->method = FACTOR_METHOD_TRIAL;
@@ -454,11 +464,13 @@ static void on_activate(GtkApplication *app, gpointer user_data)
     w->opt.USE_SIEVE = false;
     w->opt.USE_BENCHMARKING = false;
     w->opt.cancel_flag = NULL;
+    w->opt.USE_SIMD = false;
 
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w->sieve_button), FALSE);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w->benchmark_button), FALSE);
     gtk_button_set_label(GTK_BUTTON(w->sieve_button), "Sieve OFF");
     gtk_button_set_label(GTK_BUTTON(w->benchmark_button), "Benchmarking OFF");
+    gtk_button_set_label(GTK_BUTTON(w->simd_button), "SIMD OFF");
     GtkWidget *quit_button = GTK_WIDGET(gtk_builder_get_object(builder, "quit_button"));
 
     g_signal_connect(w->entry, "insert-text",
@@ -483,9 +495,10 @@ static void on_activate(GtkApplication *app, gpointer user_data)
                      G_CALLBACK(on_fermat_clicked), w);
     g_signal_connect(w->pollard_button, "clicked",
                      G_CALLBACK(on_pollard_clicked), w);
-
     g_signal_connect(w->sieve_button, "toggled",
                      G_CALLBACK(on_sieve_toggled), w);
+    g_signal_connect(w->simd_button, "toggled",
+                     G_CALLBACK(on_simd_toggled), w);
     g_signal_connect(w->benchmark_button, "toggled",
                      G_CALLBACK(on_benchmark_toggled), w);
 

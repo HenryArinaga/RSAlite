@@ -2,7 +2,7 @@
 <!-- Generated with glade 3.40.0 -->
 <!-- Prime Factorization UI with Advanced Settings -->
 <interface>
-  <requires lib="gtk+" version="3.24"/>
+  <requires lib="gtk+" version="3.24" />
   <object class="GtkApplicationWindow" id="entry_window">
     <property name="can-focus">False</property>
     <property name="title">RSAlite Prime Factorization</property>
@@ -191,7 +191,7 @@
             <property name="can-focus">False</property>
             <property name="label" translatable="yes">Optimization &amp; Settings</property>
             <attributes>
-              <attribute name="weight" value="bold"/>
+              <attribute name="weight" value="bold" />
             </attributes>
           </object>
           <packing>
@@ -201,7 +201,7 @@
           </packing>
         </child>
         <child>
-          <object class="GtkToggleButton" id="simd_toggle">
+          <object class="GtkToggleButton" id="simd_button">
             <property name="label" translatable="yes">SIMD</property>
             <property name="width-request">150</property>
             <property name="height-request">40</property>
@@ -286,7 +286,7 @@
             <property name="can-focus">False</property>
             <property name="receives-default">False</property>
             <property name="hexpand">True</property>
-          </object>  
+          </object>
           <packing>
             <property name="left-attach">2</property>
             <property name="top-attach">7</property>
