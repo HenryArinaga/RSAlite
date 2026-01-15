@@ -1,7 +1,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
-
 #include "factor.h"
 #include "prime.h"
 #include "optimization.h"
@@ -22,14 +21,14 @@ int factor_with_trial(uint64_t n,
     if (n <= 1)
         return 0;
 
-    if (use_sieve && n > 10000000ULL)
-        use_sieve = false;
-
     int *prime = NULL;
+
+    uint64_t limit = 0;
+    for (limit = 1; (limit + 1) <= n / (limit + 1); limit++) {}
 
     if (use_sieve)
     {
-        prime = generate_prime_with_sieve((int)n);
+        prime = generate_prime_with_sieve((int)limit);
         if (!prime)
             return 0;
     }
@@ -44,7 +43,7 @@ int factor_with_trial(uint64_t n,
 
         if (use_sieve)
         {
-            if (prime[p])
+            if (p <= limit && prime[p])
                 continue;
         }
         else
@@ -70,18 +69,13 @@ int factor_with_trial(uint64_t n,
         }
     }
 
-    if (cancel_requested(opt))
-    {
-        free(prime);
-        return count;
-    }
-
     if (n > 1 && count < max_factors)
         factors[count++] = n;
 
     free(prime);
     return count;
 }
+
 
 int factor_with_sqrt(uint64_t n,
                      uint64_t *factors,

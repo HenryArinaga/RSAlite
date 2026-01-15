@@ -87,24 +87,21 @@ int is_prime_wheel(int n)
 
 int *generate_prime_with_sieve(int n)
 {
-
-    int *prime = malloc((n + 1) * sizeof(int));
+    int *prime = calloc((size_t)n + 1, sizeof(int));
     if (!prime)
-    {
         return NULL;
-    }
-    prime[0] = 1;
-    prime[1] = 1;
 
-    for (int i = 2; i * i <= n; i++)
+    if (n >= 0) prime[0] = 1;
+    if (n >= 1) prime[1] = 1;
+
+    for (int i = 2; (long long)i * i <= n; i++)
     {
         if (prime[i] == 0)
         {
-            for (int j = i * i; j <= n; j = j + i)
-            {
+            for (int j = i * i; j <= n; j += i)
                 prime[j] = 1;
-            }
         }
     }
+
     return prime;
 }
