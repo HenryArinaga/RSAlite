@@ -268,6 +268,26 @@ static void on_method_row_activated(GtkListBox *box, GtkListBoxRow *row, gpointe
         default: w->method = FACTOR_METHOD_TRIAL; break;
     }
 }
+static void on_sieve_switch_toggled(GtkSwitch *sw, GParamSpec *pspec, gpointer user_data)
+{
+    (void)pspec;
+    AppWidgets *w = user_data;
+    w->opt.USE_SIEVE = gtk_switch_get_active(sw);
+}
+
+static void on_simd_switch_toggled(GtkSwitch *sw, GParamSpec *pspec, gpointer user_data)
+{
+    (void)pspec;
+    AppWidgets *w = user_data;
+    w->opt.USE_SIMD = gtk_switch_get_active(sw);
+}
+
+static void on_benchmark_switch_toggled(GtkSwitch *sw, GParamSpec *pspec, gpointer user_data)
+{
+    (void)pspec;
+    AppWidgets *w = user_data;
+    w->opt.USE_BENCHMARKING = gtk_switch_get_active(sw);
+}
 
 static void on_cancel_clicked(GtkButton *button, gpointer user_data)
 {
@@ -401,22 +421,12 @@ static void on_activate(GtkApplication *app, gpointer user_data)
     g_signal_connect(w->methods_listbox, "row-activated",
                      G_CALLBACK(on_method_row_activated), w);
     
-    g_object_bind_property(w->sieve_switch, "active",
-                          &w->opt.USE_SIEVE, "value",
-                          G_BINDING_BIDIRECTIONAL);
-    g_object_bind_property(w->simd_switch, "active",
-                          &w->opt.USE_SIMD, "value",
-                          G_BINDING_BIDIRECTIONAL);
-    g_object_bind_property(w->benchmark_switch, "active",
-                          &w->opt.USE_BENCHMARKING, "value",
-                          G_BINDING_BIDIRECTIONAL);
-    
-    g_signal_connect_swapped(w->sieve_switch, "notify::active",
-        G_CALLBACK(gtk_switch_get_active), &w->opt.USE_SIEVE);
-    g_signal_connect_swapped(w->simd_switch, "notify::active",
-        G_CALLBACK(gtk_switch_get_active), &w->opt.USE_SIMD);
-    g_signal_connect_swapped(w->benchmark_switch, "notify::active",
-        G_CALLBACK(gtk_switch_get_active), &w->opt.USE_BENCHMARKING);
+    g_signal_connect(w->sieve_switch, "notify::active",
+                     G_CALLBACK(on_sieve_switch_toggled), w);
+    g_signal_connect(w->simd_switch, "notify::active",
+                     G_CALLBACK(on_simd_switch_toggled), w);
+    g_signal_connect(w->benchmark_switch, "notify::active",
+                     G_CALLBACK(on_benchmark_switch_toggled), w);
     
     gtk_window_set_application(GTK_WINDOW(window), app);
     gtk_widget_show_all(window);
