@@ -32,6 +32,7 @@ typedef struct
     GtkWidget *sieve_switch;
     GtkWidget *simd_switch;
     GtkWidget *benchmark_switch;
+    GtkWidget *dark_mode_switch;
     
     BenchmarkJob *current_job;
     
@@ -303,6 +304,31 @@ static void on_benchmark_switch_toggled(GtkSwitch *sw, GParamSpec *pspec, gpoint
     w->opt.USE_BENCHMARKING = gtk_switch_get_active(sw);
 }
 
+static void on_dark_mode_switch_toggled(GtkSwitch *sw, GParamSpec *pspec, gpointer user_data)
+{
+    (void)pspec;
+    (void)user_data;
+    
+    gboolean dark_mode = gtk_switch_get_active(sw);
+    GtkSettings *settings = gtk_settings_get_default();
+    g_object_set(settings, "gtk-application-prefer-dark-theme", dark_mode, NULL);
+    
+    // Save preference to config file
+    const gchar *config_dir = g_get_user_config_dir();
+    gchar *config_path = g_build_filename(config_dir, "rsalite", NULL);
+    g_mkdir_with_parents(config_path, 0755);
+    
+    gchar *config_file = g_build_filename(config_path, "settings.ini", NULL);
+    GKeyFile *keyfile = g_key_file_new();
+    
+    g_key_file_set_boolean(keyfile, "Appearance", "dark-mode", dark_mode);
+    g_key_file_save_to_file(keyfile, config_file, NULL);
+    
+    g_key_file_free(keyfile);
+    g_free(config_file);
+    g_free(config_path);
+}
+
 static void on_cancel_clicked(GtkButton *button, gpointer user_data)
 {
     (void)button;
@@ -407,6 +433,7 @@ static void on_activate(GtkApplication *app, gpointer user_data)
     w->sieve_switch = GTK_WIDGET(gtk_builder_get_object(builder, "sieve_switch"));
     w->simd_switch = GTK_WIDGET(gtk_builder_get_object(builder, "simd_switch"));
     w->benchmark_switch = GTK_WIDGET(gtk_builder_get_object(builder, "benchmark_switch"));
+    w->dark_mode_switch = GTK_WIDGET(gtk_builder_get_object(builder, "dark_mode_switch"));
     
     w->method = FACTOR_METHOD_TRIAL;
     w->opt.USE_SIEVE = false;
@@ -441,6 +468,27 @@ static void on_activate(GtkApplication *app, gpointer user_data)
                      G_CALLBACK(on_simd_switch_toggled), w);
     g_signal_connect(w->benchmark_switch, "notify::active",
                      G_CALLBACK(on_benchmark_switch_toggled), w);
+    g_signal_connect(w->dark_mode_switch, "notify::active",
+                     G_CALLBACK(on_dark_mode_switch_toggled), w);
+    
+    // Load and apply saved dark mode preference
+    const gchar *config_dir = g_get_user_config_dir();
+    gchar *config_file = g_build_filename(config_dir, "rsalite", "settings.ini", NULL);
+    
+    GKeyFile *keyfile = g_key_file_new();
+    gboolean dark_mode = FALSE;
+    
+    if (g_key_file_load_from_file(keyfile, config_file, G_KEY_FILE_NONE, NULL))
+    {
+        dark_mode = g_key_file_get_boolean(keyfile, "Appearance", "dark-mode", NULL);
+    }
+    
+    g_key_file_free(keyfile);
+    g_free(config_file);
+    
+    gtk_switch_set_active(GTK_SWITCH(w->dark_mode_switch), dark_mode);
+    GtkSettings *gtk_settings = gtk_settings_get_default();
+    g_object_set(gtk_settings, "gtk-application-prefer-dark-theme", dark_mode, NULL);
     
     gtk_window_set_application(GTK_WINDOW(window), app);
     gtk_widget_show_all(window);
