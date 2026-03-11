@@ -267,6 +267,20 @@ static void on_method_row_activated(GtkListBox *box, GtkListBoxRow *row, gpointe
         case 4: w->method = FACTOR_METHOD_POLLARD; break;
         default: w->method = FACTOR_METHOD_TRIAL; break;
     }
+    
+    // Sieve only works with Trial Division
+    bool sieve_available = (w->method == FACTOR_METHOD_TRIAL);
+    gtk_widget_set_sensitive(w->sieve_switch, sieve_available);
+    if (!sieve_available) {
+        gtk_switch_set_active(GTK_SWITCH(w->sieve_switch), FALSE);
+    }
+    
+    // SIMD works with Trial Division and SQRT
+    bool simd_available = (w->method == FACTOR_METHOD_TRIAL || w->method == FACTOR_METHOD_SQRT);
+    gtk_widget_set_sensitive(w->simd_switch, simd_available);
+    if (!simd_available) {
+        gtk_switch_set_active(GTK_SWITCH(w->simd_switch), FALSE);
+    }
 }
 static void on_sieve_switch_toggled(GtkSwitch *sw, GParamSpec *pspec, gpointer user_data)
 {

@@ -20,6 +20,8 @@ make rsalite-gui-modern
 ### Configure Settings
 - Click "Settings" in sidebar
 - Toggle Sieve, SIMD, or Benchmarking
+- Note: Sieve only works with Trial Division
+- Note: SIMD only works with Trial Division and SQRT methods
 
 ### View History
 - Click "Logs" in sidebar
@@ -59,6 +61,9 @@ make rsalite-gui-modern
 - **Home**: Main factorization interface
 - **Methods**: Algorithm selection with descriptions
 - **Settings**: Optimization toggles with explanations
+  - Sieve optimization (Trial Division only)
+  - SIMD acceleration (Trial Division and SQRT only)
+  - Benchmarking mode (all methods)
 - **Logs**: Operation history with export
 
 ### Modern Controls
