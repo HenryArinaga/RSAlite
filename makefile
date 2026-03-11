@@ -3,17 +3,21 @@ CFLAGS  = -Wall -Wextra -std=c11 -g
 
 CLI_OBJS   = main.o factor.o prime.o log.o simd.o
 GUI_OBJS   = gui_main.o factor.o prime.o log.o simd.o
+GUI_MODERN_OBJS = gui_modern.o factor.o prime.o log.o simd.o
 BENCH_OBJS = bench.o factor.o prime.o simd.o
 TEST_OBJS  = test_factor.o factor.o prime.o simd.o
 LOG_TEST_OBJS = log_test.o log.o factor.o prime.o simd.o
 
-all: rsalite rsalite-gui rsalite-bench
+all: rsalite rsalite-gui rsalite-gui-modern rsalite-bench
 
 rsalite: $(CLI_OBJS)
 	$(CC) $(CFLAGS) -o $@ $(CLI_OBJS)
 
 rsalite-gui: $(GUI_OBJS)
 	$(CC) $(CFLAGS) -o $@ $(GUI_OBJS) $(GTK_LIBS)
+
+rsalite-gui-modern: $(GUI_MODERN_OBJS)
+	$(CC) $(CFLAGS) -o $@ $(GUI_MODERN_OBJS) $(GTK_LIBS)
 
 rsalite-bench: $(BENCH_OBJS)
 	$(CC) $(CFLAGS) -o $@ $(BENCH_OBJS)
@@ -22,6 +26,9 @@ main.o: main.c factor.h prime.h simd.h
 	$(CC) $(CFLAGS) -c $<
 
 gui_main.o: gui_main.c factor.h prime.h simd.h
+	$(CC) $(CFLAGS) $(GTK_CFLAGS) -c $<
+
+gui_modern.o: gui_modern.c factor.h prime.h simd.h log.h
 	$(CC) $(CFLAGS) $(GTK_CFLAGS) -c $<
 
 factor.o: factor.c factor.h prime.h optimization.h simd.h
@@ -57,6 +64,6 @@ log_test: $(LOG_TEST_OBJS)
 	$(CC) $(CFLAGS) -o $@ $(LOG_TEST_OBJS)
 
 clean:
-	rm -f *.o rsalite rsalite-gui rsalite-bench test_factor log_test
+	rm -f *.o rsalite rsalite-gui rsalite-gui-modern rsalite-bench test_factor log_test
 
 .PHONY: all clean test
